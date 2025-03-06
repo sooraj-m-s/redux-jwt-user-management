@@ -1,30 +1,23 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
-from .models import UserProfile
+from .models import Users
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
     class Meta:
-        model=User
-        fields=['username', 'email', 'password']
+        model=Users
+        fields=['first_name', 'email', 'password', 'profile_image']
 
     def create(self, validated_data):
-        user = User.objects.create_user(
-            username=validated_data['username'],
+        user = Users(
+            first_name=validated_data['first_name'],
             email=validated_data['email'],
-            password=validated_data['password']
+            profile_image=validated_data['profile_image']
         )
+        user.set_password(validated_data['password'])
+        user.save()
         return user
-
-
-class UserSerializer(serializers.ModelSerializer):
-    profile_image = serializers.ImageField(source='profile.profile_image', read_only=True)
-
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'profile_image']
 
 
 class ProfileUpdateSerializer(serializers.Serializer):
@@ -47,11 +40,11 @@ class AdminUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
 
     class Meta:
-        model = User
+        model = Users
         fields = ['id', 'username', 'email', 'password']
 
     def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
+        user = Users.objects.create_user(**validated_data)
         return user
 
     def update(self, instance, validated_data):
