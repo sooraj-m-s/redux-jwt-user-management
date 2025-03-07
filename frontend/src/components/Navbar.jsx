@@ -1,16 +1,25 @@
+import axios from 'axios';
 import { useSelector, useDispatch } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
-import { logout } from '../redux/authSlice';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { logout } from '../redux/slices/userSlice';
 
 
 function Navbar() {
-  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { isAuthenticated } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await axios.post('http://localhost:8000/logout/', {}, { withCredentials: true });
+      dispatch(logout());
+      navigate('/login', { replace: true });
+    } catch (err) {
+      console.error('Logout failed:', err);
+      dispatch(logout());
+      navigate('/login', { replace: true });
+    }
   };
 
   return (
@@ -30,7 +39,9 @@ function Navbar() {
             </>
           ) : (
             <>
-              <Link to="/login" className="text-white hover:text-gray-200 transition">Login</Link>
+              {location.pathname !== '/login' && (
+                <Link to="/login" className="text-white hover:text-gray-200 transition">Login</Link>
+              )}
               <Link to="/register" className="text-white hover:text-gray-200 transition">Register</Link>
             </>
           )}

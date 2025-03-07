@@ -2,7 +2,7 @@ import { useSelector } from 'react-redux';
 
 
 function Home() {
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { isAuthenticated, user } = useSelector((state) => state.user);
 
   return (
     <div className="container mx-auto p-6 text-center">
