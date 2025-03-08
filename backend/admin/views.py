@@ -1,12 +1,13 @@
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from base.models import Users
-from .serializer import AdminDashboardSerializer
+from .serializer import AdminDashboardSerializer, UpdateUserSerializer
+from base.serializer import UserRegistrationSerializer
 from .permissions import IsSuperUser
 
 
@@ -24,16 +25,17 @@ class AdminLogin(APIView):
         user = authenticate(request, email=email, password=password)
         if user.is_superuser:
             refresh = RefreshToken.for_user(user)
-            return Response(
+            res = Response(
                 {
                     'message': 'Login successful',
-                    'refresh': str(refresh),
-                    'access': str(refresh.access_token),
                     'email': user.email,
-                    'profile_image': user.profile_image,
+                    'profile_image': user.profile_image
                 },
                 status=status.HTTP_200_OK
             )
+            res.set_cookie('access_token', str(refresh.access_token), httponly=True, secure=True, samesite='Lax')
+            res.set_cookie('refresh_token', str(refresh), httponly=True, secure=True, samesite='Lax')
+            return res
         elif not user.is_superuser:
             return Response({'error': 'You are not authorized to access this page'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
@@ -46,3 +48,35 @@ class AdminDashboard(APIView):
         users = Users.objects.filter(is_superuser=False)
         serializer = AdminDashboardSerializer(users, many=True)
         return Response({'users': serializer.data}, status=status.HTTP_200_OK)
+
+
+@permission_classes([IsSuperUser])
+class CreateUser(APIView):
+    def post(self, request):
+        password = request.data.get('password', '')
+        email = request.data.get('email', '')
+        if len(password) < 8 or " " in password:
+            return Response({'error': 'Password must be at least 8 characters and cannot contain spaces'}, status=status.HTTP_400_BAD_REQUEST)
+        if Users.objects.filter(email=email).exists():
+            return Response({'error': 'Email already registered'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = UserRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@permission_classes([IsSuperUser])
+class EditUserView(APIView):
+    def patch(self, request, user_id):
+        try:
+            user = Users.objects.get(user_id=user_id)
+        except Users.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = UpdateUserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
