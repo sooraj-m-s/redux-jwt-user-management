@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { loginSuccess, loginFailure, setLoading } from '../redux/slices/userSlice';
 import { toast } from 'react-toastify';
+import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
 
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
-  const { loading, error, first_name } = useSelector((state) => state.user);
+  const { loading } = useSelector((state) => state.user);
   const navigate = useNavigate();
 
   const validateForm = () => {
@@ -24,12 +26,6 @@ const Login = () => {
     }
     return true;
   };
-
-  useEffect(() => {
-    if (error) {
-      toast.error(error);
-    }
-  }, [error]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -65,8 +61,12 @@ const Login = () => {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen bg-blue-100">
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md w-80">
         <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
 
@@ -77,9 +77,20 @@ const Login = () => {
           <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2 border border-gray-300 rounded mt-1"/>
         </div>
 
-        <div className="mb-4">
+        <div className="mb-4 relative">
           <label className="block text-gray-700">Password</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2 border border-gray-300 rounded mt-1"/>
+          <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2 border border-gray-300 rounded mt-1 pr-10"/>
+          <button
+            type="button"
+            onClick={togglePasswordVisibility}
+            className="absolute right-2 top-9 text-gray-500 hover:text-gray-700 focus:outline-none"
+          >
+            {showPassword ? (
+              <AiFillEyeInvisible size={20} />
+            ) : (
+              <AiFillEye size={20} />
+            )}
+          </button>
         </div>
 
         <button

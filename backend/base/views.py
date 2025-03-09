@@ -18,10 +18,12 @@ class Login(APIView):
         email = request.data.get('email', '')
         password = request.data.get('password', '')
         if not email or not password:
-            return Response({'error': 'Email and password are required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Email and password are required'}, status=status.HTTP_403_FORBIDDEN)
 
         user = authenticate(request, email=email, password=password)
         if user:
+            if user.status == 'Blocked':
+                return Response({'error': 'Your account has been blocked!'}, status=status.HTTP_401_UNAUTHORIZED)
             refresh = RefreshToken.for_user(user)
             res = Response(
                 {
@@ -71,7 +73,8 @@ class Dashboard(APIView):
         data = {
             'first_name': user.first_name,
             'profile_image': user.profile_image,
-            'email': user.email
+            'email': user.email,
+            'isAdmin': user.is_superuser
         }
         return Response(data, status=status.HTTP_200_OK)
 

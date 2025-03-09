@@ -23,13 +23,16 @@ class AdminLogin(APIView):
             return Response({'error': 'Email and password are required'}, status=status.HTTP_400_BAD_REQUEST)
 
         user = authenticate(request, email=email, password=password)
-        if user.is_superuser:
+        if not user:
+            return Response({'error': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
+        elif user.is_superuser:
             refresh = RefreshToken.for_user(user)
             res = Response(
                 {
                     'message': 'Login successful',
                     'email': user.email,
-                    'profile_image': user.profile_image
+                    'profile_image': user.profile_image,
+                    'isAdmin': user.is_superuser
                 },
                 status=status.HTTP_200_OK
             )
@@ -38,16 +41,15 @@ class AdminLogin(APIView):
             return res
         elif not user.is_superuser:
             return Response({'error': 'You are not authorized to access this page'}, status=status.HTTP_401_UNAUTHORIZED)
-        else:
-            return Response({'error': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 @permission_classes([IsSuperUser])
 class AdminDashboard(APIView):
     def get(self, request):
-        users = Users.objects.filter(is_superuser=False)
-        serializer = AdminDashboardSerializer(users, many=True)
-        return Response({'users': serializer.data}, status=status.HTTP_200_OK)
+        users = Users.objects.filter(is_superuser=False, status='Active')
+        admin_serializer = AdminDashboardSerializer(request.user)
+        users_serializer = AdminDashboardSerializer(users, many=True)
+        return Response({'admin': admin_serializer.data, 'users': users_serializer.data}, status=status.HTTP_200_OK)
 
 
 @permission_classes([IsSuperUser])

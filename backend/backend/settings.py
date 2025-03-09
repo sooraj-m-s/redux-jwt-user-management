@@ -156,7 +156,7 @@ MEDIA_URL = '/media/'
 AUTH_USER_MODEL = 'base.Users'
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  # Access token lasts 1 hour
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),  # Access token lasts 1 hour
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # Refresh token lasts 7 days
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'user_id'

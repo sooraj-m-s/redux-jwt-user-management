@@ -23,13 +23,12 @@ function Navbar() {
   };
 
   return (
-    <nav className="bg-blue-600 p-4 shadow-md">
+    <nav className="bg-blue-900 p-4 shadow-md">
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/" className="text-white text-xl font-semibold">MyApp</Link>
         <div className="space-x-4">
           {isAuthenticated ? (
             <>
-              <Link to="/profile" className="text-white hover:text-gray-200 transition">Profile</Link>
               <button
                 onClick={handleLogout}
                 className="text-white hover:text-gray-200 transition"
@@ -42,7 +41,9 @@ function Navbar() {
               {location.pathname !== '/login' && (
                 <Link to="/login" className="text-white hover:text-gray-200 transition">Login</Link>
               )}
-              <Link to="/register" className="text-white hover:text-gray-200 transition">Register</Link>
+              {location.pathname !== '/register' && (
+                <Link to="/register" className="text-white hover:text-gray-200 transition">Register</Link>
+              )}
             </>
           )}
         </div>
