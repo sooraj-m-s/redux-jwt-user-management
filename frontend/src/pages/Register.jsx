@@ -81,7 +81,7 @@ const Register = () => {
       );
 
       if (response.status === 201) {
-        toast.success('Registration successful!');
+        toast.success('Registration successful! Redirecting to login...');
         setTimeout(() => navigate('/login'), 2000);
       }
     } catch (err) {
